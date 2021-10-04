@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        td,
+        th {
+            border-top: 1px solid gray;
+            border-bottom: 1px solid gray;
+            padding: 5px 10px;
+            text-align: center;
+            
+
+        }
+
+        th {
+            background-color: teal;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: darkseagreen;
+            color: white;
+            cursor: pointer;
+        }
+
+        tr>td:nth-child(1) {
+            width: 15%;
+        }
+
+        tr>td:nth-child(2) {
+            width: 30%;
+        }
+
+        tr>td:nth-child(3) {
+            width: 15%;
+        }
+
+        tr>td:nth-child(4) {
+            width: 40%;
+        }
+    </style>
+</head>
+
+<body>
+    <h3>AJAX - 비동기통신</h3>
+    <button id="getAll">GET</button>
+    <button id="getOne">GET ONE</button>
+    <button id="post">POST</button>
+    <button id="put">PUT</button>
+    <button id="patch">PATCH</button>
+    <button id="delete">DELETE</button>
+    <br>
+    <input type="text" id="id" placeholder="번호를 입력하세요">
+    <input type="text" id="name" placeholder="이름을 입력하세요">
+    <input type="text" id="age" placeholder="나이를 입력하세요">
+    <input type="text" id="hobbies" placeholder="취미를 입력하세요">
+    <legend id='hobby'>
+        <input type="checkbox" class="hobby" value="축구" id="football"><label for="football">축구</label>
+        <input type="checkbox" class="hobby" value="달리기" id="running"><label for="running">달리기</label>
+        <input type="checkbox" class="hobby" value="노래" id="singing"><label for="singing">노래</label>
+        <input type="checkbox" class="hobby" value="읽기" id="reading"><label for="reading">읽기</label>
+    </legend>
+    <table id="list" style="width: 60%;border-collapse: collapse;">
+
+    </table>
+    <pre></pre>
+
+    <script>
+        // 버튼에 대한 이벤트 리스너
+        document.querySelector("#getAll").addEventListener('click', function () {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', '/customer');    // ajax 요청 준비(요청 메소드, url)
+            xhr.send();                     // ajax 요청 전송
+
+            // xhr 객체에 대한 이벤트 리스너
+            // onload:**요청이 성공적으로 완료되었을 때 동작
+            xhr.onload = function () {
+                if (xhr.status == 200) {
+                    //document.querySelector('pre').innerHTML = xhr.response;
+                    const list = JSON.parse(xhr.response);      //json 문자열 -> js object로 변환
+                    const $title = document.createElement("tr");
+                    $title.innerHTML = `
+                        <th>번호</th>
+                        <th>이름</th>
+                        <th>나이</th>
+                        <th>취미</th>
+                    `;
+                    document.getElementById('list').appendChild($title);
+                    //응답받은 data(배열)로 반복 실행
+                    list.forEach(function (customer) {    // 배열에서 하나 가져온 customer
+                        const $tr = document.createElement("tr");
+                        const $temp = `
+                    <td>${customer.id}</td>
+                    <td>${customer.name}</td>
+                    <td>${customer.age}</td>
+                    <td>${customer.hobby}</td>
+                    `;
+                        $tr.innerHTML = $temp;
+                        document.getElementById('list').appendChild($tr);
+                    });
+                } else {
+                    console.error('Error', xhr.status, xhr.statusText);
+                }
+
+            };
+
+        });
+
+        document.querySelector("#getOne").addEventListener('click', function () {
+            const xhr = new XMLHttpRequest();
+            // xhr.open('GET', '/customer/1');      // get메소드로 resource 중 id 값 1번을 요청
+            const id = document.querySelector('#id').value;
+            if (id == "") {
+                alert("id 입력은 필수입니다.");
+                return;
+            }
+            xhr.open('GET', `/customer/${id}`);
+            xhr.send();
+
+            xhr.onload = function () {
+                if (xhr.status == 200) {
+                    document.querySelector('pre').innerHTML = xhr.response;
+                } else {
+                    console.error('Error', xhr.status, xhr.statusText);
+                }
+
+            }
+
+        });
+
+        document.querySelector('#post').addEventListener('click', function () {
+            const xhr = new XMLHttpRequest();
+            const id = document.querySelector('#id').value;
+            const name = document.querySelector('#name').value;
+            const age = document.querySelector('#age').value;
+            const hobbies = document.querySelector('#hobbies').value;
+            xhr.open('POST', '/customer');
+            //request body(요청 몸체)에 담아 서버로 전송할 페이로드의 MIME 타입을 지정.
+            xhr.setRequestHeader('content-type', 'application/json');
+            xhr.send(JSON.stringify({ "id": `${id}`, "name": `${name}`, "age": `${age}`, "hobby": `${hobbies}` }));
+            xhr.onload = () => {   // 201:created
+                if (xhr.status === 200 || xhr.status === 201) {
+                    document.querySelector('pre').innerHTML = xhr.response;
+                } else {
+                    console.error('Error', xhr.status, xhr.statusText);
+                }
+            };
+        });
+
+        document.querySelector('#put').addEventListener('click', function () {
+            const xhr = new XMLHttpRequest();
+
+            xhr.open('PUT', '/customer/4');
+            //request body(요청 몸체)에 담아 서버로 전송할 페이로드의 MIME 타입을 지정.
+            xhr.setRequestHeader('content-type', 'application/json');
+            xhr.send(JSON.stringify({ "id": 3, "name": "nahyeon", "age": 23, "hobby": ["노래", "수영"] }));
+            xhr.onload = () => {   // 201:created
+                if (xhr.status === 200) {
+                    document.querySelector('pre').innerHTML = xhr.response;
+                } else {
+                    console.error('Error', xhr.status, xhr.statusText);
+                }
+            };
+        });
+
+        document.querySelector('#patch').addEventListener('click', function () {
+            const xhr = new XMLHttpRequest();
+
+            xhr.open('PATCH', '/customer/4');
+            //request body(요청 몸체)에 담아 서버로 전송할 페이로드의 MIME 타입을 지정.
+            xhr.setRequestHeader('content-type', 'application/json');
+            xhr.send(JSON.stringify({ "age": 22 }));
+            xhr.onload = () => {   // 201:created
+                if (xhr.status === 200) {
+                    document.querySelector('pre').innerHTML = xhr.response;
+                } else {
+                    console.error('Error', xhr.status, xhr.statusText);
+                }
+            };
+        });
+
+        document.querySelector('#delete').addEventListener('click', function () {
+            const xhr = new XMLHttpRequest();
+            const id = document.querySelector('#id').value;
+            xhr.open('DELETE', `/customer/${id}`);
+            //request body(요청 몸체)에 담아 서버로 전송할 페이로드의 MIME 타입을 지정.
+            xhr.send();
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    document.querySelector('pre').innerHTML = xhr.response;
+                } else {
+                    console.error('Error', xhr.status, xhr.statusText);
+                }
+            };
+        });
+
+
+
+
+
+
+    </script>
+</body>
+
+</html>
